@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "./pb";
+
+service AuthService {
+  rpc Login(LoginReq) returns (LoginRes);
+  rpc Register(RegisterReq) returns (RegisterRes);
+  rpc ResetPw(ResetPwReq) returns (ResetPwRes);
+}
+
+message LoginReq {
+  string email = 1;
+  string password = 2;
+}
+message LoginRes {
+	bool success = 1;
+}
+
+message RegisterReq {
+  string email = 1;
+  string password = 2;
+}
+message RegisterRes {
+  string id = 1;
+}
+
+message ResetPwReq {
+  string email = 1;
+}
+message ResetPwRes {
+	bool success = 1;
+}

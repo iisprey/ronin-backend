@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package pb;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "./pb";
+
+option (gogoproto.sizer_all) = true;
+option (gogoproto.marshaler_all) = true;
+option (gogoproto.unmarshaler_all) = true;
+
+message User {
+  string id = 1 [ (gogoproto.jsontag) = "_id", (gogoproto.moretags) = "bson:\"_id\""];
+	string email = 2;
+	string password = 3;
+} 
+
+service UserService {
+  rpc CreateUser(CreateUserReq) returns (CreateUserRes);
+  rpc ReadUser(ReadUserReq) returns (ReadUserRes);
+  rpc UpdateUser(UpdateUserReq) returns (UpdateUserRes);
+  rpc DeleteUser(DeleteUserReq) returns (DeleteUserRes);
+  rpc ListUsers(ListUsersReq) returns (stream ListUsersRes);
+}
+
+message CreateUserReq {
+  User user = 1;
+}
+
+message CreateUserRes {
+  string id = 1;
+}
+
+message ReadUserReq {
+  string id = 1;
+}
+
+message ReadUserRes {
+  User user = 1;
+}
+
+message UpdateUserReq {
+  User user = 1;
+}
+
+message UpdateUserRes {
+  bool success = 1;
+}
+
+message DeleteUserReq {
+  string id = 1;
+}
+
+message DeleteUserRes {
+  bool success = 1;
+}
+
+message ListUsersReq {}
+
+message ListUsersRes {
+  User user = 1;
+}
