@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"main/pb"
 	"net"
@@ -12,7 +13,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc"
+	"gopkg.in/gomail.v2"
 )
 
 var client, ctx, cancel, _ = connectToMongoDB("mongodb://localhost:27017")
@@ -37,21 +40,48 @@ type server struct {
 }
 
 func (s *server) Login(ctx context.Context, req *pb.LoginReq) (*pb.LoginRes, error) {
-	// TODO
-	return &pb.LoginRes{Success: true}, nil
+	col := client.Database("ronin").Collection("users")
+	result := col.FindOne(ctx, bson.M{"email": req.Email})
+	user := &pb.User{}
+	result.Decode(user)
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
+	if err != nil {
+		return &pb.LoginRes{Success: false}, nil
+	} else {
+		return &pb.LoginRes{Success: true}, nil
+	}
 }
 func (s *server) Register(ctx context.Context, req *pb.RegisterReq) (*pb.RegisterRes, error) {
-	// TODO
-	return &pb.RegisterRes{Id: "123"}, nil
+	conn, _ := grpc.Dial("localhost:8080", grpc.WithInsecure())
+	defer conn.Close()
+	client := pb.NewUserServiceClient(conn)
+	password := []byte(req.Password)
+	hashedPassword, _ := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+	userId, _ := client.CreateUser(ctx, &pb.CreateUserReq{User: &pb.User{
+		Email:    req.Email,
+		Password: string(hashedPassword),
+	}})
+	return &pb.RegisterRes{Id: userId.Id}, nil
 }
 func (s *server) ResetPw(ctx context.Context, req *pb.ResetPwReq) (*pb.ResetPwRes, error) {
+	d := gomail.NewDialer("mail.kudamono.app", 587, "payment@kudamono.app", "5rp2eeph3k")
+	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	m := gomail.NewMessage()
+	m.SetHeader("From", "payment@kudamono.app")
+	m.SetHeader("To", "hasanbb1567@gmail.com")
+	m.SetAddressHeader("Cc", "payment@kudamono.app", "Dan")
+	m.SetHeader("Subject", "Hello!")
+	m.SetBody("text/html", "test")
 	// TODO
+	d.DialAndSend(m)
 	return &pb.ResetPwRes{Success: true}, nil
 }
 func (s *server) CreateUser(ctx context.Context, req *pb.CreateUserReq) (*pb.CreateUserRes, error) {
-	user, _ := bson.Marshal(req.User)
 	col := client.Database("ronin").Collection("users")
-	result, _ := col.InsertOne(ctx, user)
+	result, _ := col.InsertOne(ctx, bson.M{
+		"email":    req.User.Email,
+		"password": req.User.Password,
+	})
 	userId := result.InsertedID.(primitive.ObjectID).Hex()
 	return &pb.CreateUserRes{Id: userId}, nil
 }

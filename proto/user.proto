@@ -11,7 +11,7 @@ option (gogoproto.marshaler_all) = true;
 option (gogoproto.unmarshaler_all) = true;
 
 message User {
-  string id = 1 [ (gogoproto.jsontag) = "_id", (gogoproto.moretags) = "bson:\"_id\""];
+  string id = 1 [(gogoproto.jsontag) = "_id", (gogoproto.moretags) = "bson:\"_id\""];
 	string email = 2;
 	string password = 3;
 } 
