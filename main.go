@@ -64,7 +64,7 @@ func (s *server) Register(ctx context.Context, req *pb.RegisterReq) (*pb.Registe
 	return &pb.RegisterRes{Id: userId.Id}, nil
 }
 func (s *server) ResetPw(ctx context.Context, req *pb.ResetPwReq) (*pb.ResetPwRes, error) {
-	d := gomail.NewDialer("mail.kudamono.app", 587, "payment@kudamono.app", "5rp2eeph3k")
+	d := gomail.NewDialer("mail.kudamono.app", 587, "payment@kudamono.app", "password")
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	m := gomail.NewMessage()
 	m.SetHeader("From", "payment@kudamono.app")
